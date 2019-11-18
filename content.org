@@ -1,0 +1,920 @@
+* TODO Generating all permutations of a set :math:
+:PROPERTIES:
+:EXPORT_FILE_NAME: generating-all-permutations-of-a-set
+:END:
+
+https://stemhash.com/efficient-permutations-in-lexicographic-order/
+https://www.fon.hum.uva.nl/praat/manual/lexicographic_permutation_order.html#:~:text=The%20lexicographic%20permutation%20order%20starts,.%2C2%2C1).
+https://en.wikipedia.org/wiki/Heap%27s_algorithm
+https://rosettacode.org/wiki/Permutations/Rank_of_a_permutation#Go
+https://github.com/cbehopkins/permutation
+https://stackoverflow.com/questions/30226438/generate-all-permutations-in-go/30230552#30230552
+https://www.gonum.org/
+https://pkg.go.dev/gonum.org/v1/gonum/stat/combin#PermutationGenerator
+
+* TODO How to Create a Windows 11 installer on a USB drive :linux:usb:windows:
+:PROPERTIES:
+:EXPORT_FILE_NAME: how-to-create-a-windows-11-installer-on-a-usb-drive
+:END:
+
+Ensure that booting from cdrom is enabled in your UEFI settings.
+
+#+begin_src shell
+cp -v Win11_English_x64v1.iso /dev/sdb
+#+end_src
+
+#+begin_src shell
+sgdisk --zap-all /dev/sdb
+sgdisk --new=0:0+30G --typecode=0:ef00 --change-name=0:'EFI System' /dev/sdb
+blockdev --rereadpt /dev/sdb
+mkfs.ntfs --zero-time --label WINDOWS11 --no-indexing --quick /dev/sdb1
+mkdir /tmp/WindowsISO
+mount -o loop,ro /path/to/Win11_English_x64.iso /tmp/WindowsISO
+mount /dev/sdb1 /mnt
+cp -r /tmp/WindowsISO/. /mnt/
+#rm /mnt/sources/install.wim
+#wimsplit /tmp/WindowsISO/sources/install.wim /mnt/sources/install.swm 3800
+umount /mnt
+umount /tmp/WindowsISO
+rmdir /tmp/WindowsISO
+#+end_src
+
+* DONE Yazi is a cool TUI file manager
+CLOSED: [2023-09-24 Sun 12:18]
+:PROPERTIES:
+:EXPORT_FILE_NAME: yazi-is-a-cool-tui-file-manager
+:END:
+
+I update my NixOS flake quite often, and usually check the git log of the updated components.
+Today, when browsing the latest changes to Home Manager, I learned about [[https://yazi-rs.github.io/docs/][Yazi]],
+a really cool TUI file manager written in Rust.
+
+If its shell integration is enabled, a shortcut function =ya= is made available for ease of use.
+
+* DONE TIL: command -v is the POSIX way to do which :POSIX:shell:
+CLOSED: [2022-03-18 Fri 10:58]
+:PROPERTIES:
+:EXPORT_FILE_NAME: command-v-posix-way-to-do-which
+:END:
+
+While perusing the [[https://www.passwordstore.org/][password-store]] git log,
+I came up with [[https://git.zx2c4.com/password-store/commit/?id=a80a3189458a86f29f61d980b4ad977594199864][this commit]], where I learned
+that POSIX defines the shell internal command =command -v=,
+which behaves like the external command =which=
+(that locates the absolute path to an executable, by tracing =PATH=).
+
+The existence of the internal command (supported by =bash=, =dash= and =fish=, at least)
+is beneficial for writing more efficient /shell scripts/.
+
+* DONE Enabling pinentry in Doom Emacs :doom:emacs:gnupg:
+CLOSED: [2021-12-11 Sat 09:26]
+:PROPERTIES:
+:EXPORT_FILE_NAME: enabling-pinentry-in-doom-emacs
+:END:
+
+I sometimes use =emacs= remotely via =mosh=, and in those situations I cannot
+depend on the graphical =pinentry=.  Fortunately, the [[https://elpa.gnu.org/packages/pinentry.html][pinentry]] package
+(available at GNU ELPA) enables =emacs= to talk the *pinentry* protocol, and
+interface with the =gpg-agent= directly.
+
+I found useful instructions to set it up under /Doom Emacs/ on its GitHub issue
+[[https://github.com/hlissner/doom-emacs/issues/4647][#4647]], with minor adjustments:
+
+#+name: gpg-agent.conf
+#+caption: ~/.gnupg/gpg-agent.conf
+#+begin_src conf :tangle ~/.gnupg/gpg-agent.conf
+allow-emacs-pinentry
+#+end_src
+
+#+name: packages.el
+#+caption: ~/.config/doom/packages.el
+#+begin_src emacs-lisp :tangle ~/.config/doom/packages.el
+(package! pinentry)
+#+end_src
+
+#+name: config.el
+#+caption: ~/.config/doom/config.el
+#+begin_src emacs-lisp :tangle ~/.config/doom/config.el
+(use-package! pinentry
+    :init (setq epg-pinentry-mode `loopback)
+          (pinentry-start))
+#+end_src
+
+* DONE Go: replacing =gofmt= with =gofumpt= when using =lsp-mode= :doom:emacs:lsp:go:
+CLOSED: [2021-12-06 Mon 12:55]
+:PROPERTIES:
+:EXPORT_FILE_NAME: replacing-gofmt-with-gofumpt-when-using-lsp-mode
+:END:
+
+[[https://pkg.go.dev/mvdan.cc/gofumpt][=gofumpt=]] is a better =gofmt=,
+with more strictures, that match my personal taste.
+
+It is available at the AUR for Arch linux users as
+[[https://aur.archlinux.org/packages/gofumpt/][=gofumpt=]].
+
+Add this to your =~/.config/doom/config.el= to instruct =lsp-mode= to use it.
+
+#+name: config.el
+#+caption: ~/.config/doom/config.el
+#+begin_src emacs-lisp
+;; https://pkg.go.dev/mvdan.cc/gofumpt
+;; https://github.com/emacs-lsp/lsp-mode/blob/8f9259af6fc80a609c2c068d0f59c371205aca89/clients/lsp-go.el#L246
+(setq lsp-go-use-gofumpt t)
+#+end_src
+
+It is directly [[https://cs.opensource.google/go/x/tools/+/refs/tags/gopls/v0.7.3:gopls/doc/settings.md][supported]]
+by =gopls=, it just need to be told to use it.
+
+* DONE Enabling 4K@60Hz on a RPi 4 on Ubuntu 21.10 Impish Indri :raspberrypi:linux:firmware:ubuntu:
+CLOSED: [2021-11-19 Fri 07:27]
+:PROPERTIES:
+:EXPORT_FILE_NAME: enabling-4k60hz-on-a-rpi-4-on-ubuntu-21.10-impish-indri
+:END:
+I have a Raspberry Pi 4 with 8 GiB of RAM, connected to a 4K monitor (Dell
+U3818DW).  Enabling 60 Hz refresh rate should be as easy as adding
+the [[https://www.raspberrypi.com/documentation/computers/configuration.html#hdmi-configuration][=hdmi_enable_4kp60=1=]] flag to =/boot/firmware/config.txt=.
+
+But there seems to be a problem parsing the EDID information, because the
+resulting mode only affords 30 Hz.
+
+Fortunately, we can program the mode ourselves:
+
+#+name: config.txt
+#+caption: config.txt
+#+begin_src conf :tangle config.txt
+[pi4]
+# Enable 4K@60Hz, single monitor
+#force_turbo=1
+disable_fw_kms_setup=1
+max_framebuffers=1
+hdmi_enable_4kp60=1
+hdmi_cvt=3840 1600 60 7
+core_freq=600
+core_freq_min=600
+#+end_src
+
+Note that =core_freq= has to be set to 600 in order to provide the necessary
+bandwidth for the mode.  This is usually taken care of by setting
+=hdmi_enable_4kp6h=1=, but not in this case.
+
+* DONE Customizing the default splash screen image on an Intel® NUC8 :intel:nuc:nuc8:artwork:uefi:
+CLOSED: [2021-11-12 Fri 17:12]
+:PROPERTIES:
+:EXPORT_FILE_NAME: customizing-the-default-splash-screen-image-on-an-intel-nuc8
+:END:
+
+I have a NUC8i7BEH, which comes by default with some variation of:
+#+caption: The default Intel® NUC logo
+#+name: fig:default_splash_image
+[[https://www.intel.com/content/dam/support/us/en/images/mini-pcs/23875_image2.jpg]]
+
+Intel® published a way back the [[https://www.intel.com/content/www/us/en/support/articles/000023875/intel-nuc.html][Intel® Integrator Toolkit]] (or ITT for short)
+which provides an UEFI executable that can be used to replace the default splash
+image.  Let's see how.
+
+** Requirements
+*** NUC8 or older
+The list of compatible devices can be found on the download page of the ITT.
+
+*** A JPEG image with these restrictions:
+**** Size
+At most 60 KB.
+
+**** Minimum resolution
+120 x 120 pixels.
+
+**** Maximum resolution
+1920 x 1080 pixels.
+
+**** JPEG Format
+Unspecified.  And only a subset of all the variants is supported.  Fortunately,
+the ITT comes with a bunch of compatible JPEG files (the default one, at
+different resolutions), and we can use those as reference.
+
+*** GIMP
+We'll use it to edit the desired picture and export it so that it adheres to the
+"specs" mentioned.
+
+** Producing the image
+You can either draw one from scratch, or fetch one from the WWW via image search.
+Remember: nothing too fancy; we only have a maximum payload of 60 KB.
+
+I've had success using images with black background, since it meshes nicely with
+the rest of the screen, rather than white, which produces a noticeable border
+when image ends and the black screen commences.  But you be the judge.
+
+Once you are happy, export it as JPEG, trying to reduce the size without sacrificing quality.
+
+** Producing a =.bio= file
+1. Download the toolkit and extract the =ITK6.efi= executable onto your ESP.  If that spooks you, you can use instead a FAT32 formatted USB drive.
+2. Place a copy of the JPEG image alongside the =ITK6.efi= executable, e.g. =splash.jpg=
+3. Enable the Internal UEFI Shell on the boot section of the BIOS Setup.
+4. Boot the Internal UEFI Shell (pressing =F10= on bootup may prove helpful).
+5. Press =ESC= to prevent the execution of the =startup.nsh=.
+6. Enter =map -r= to identify the device where the =ITK6.efi= resides, e.g. =fs0:=.
+7. Enter =fs0:= (or the actual device in your case).
+8. Enter =ls= to ascertain you are where you think you are.
+9. Enter =ITK6.efi -b -x SPLASH.bio -il splash.jpg=.
+   Some problems with the JPEG image are reported here, for instance, if it is
+   too big. If so, rinse and repeat until this step does not croak.
+10. Enter =reset= to reboot.
+11. Press =F7= to update BIOS.
+12. Navigate to the ESP (or whatever device you are using) and select =SPLASH.bio=.
+13. Confirm that you want to flash it.
+14. The NUC will reboot, and you will be asked to confirm, by pressing =9=, that you accept the flash request.
+15. If the JPEG is accepted, you will see a message stating that the graphical memory is being updated. But if the image is not valid, it will skip to the (previous) splash image.
+16. If everything is hunky-dory, the next thing you'll see is your splash image, yay!
+    But it could also be a blank screen. If so, try again until you get the JPEG format
+    right.
+
+* DONE TIL: The Fisher-Yates Shuffle :algorithms:programming:go:
+CLOSED: [2021-11-06 Sat 08:24]
+:PROPERTIES:
+:EXPORT_FILE_NAME: the-fisher-yates-shuffle
+:END:
+... or how to efficiently produce a permutation of a set of elements.
+
+https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+
+Incidentally, it is [[https://pkg.go.dev/math/rand@master#Shuffle][available]] in =math/rand= since Go 1.10.
+
+Look for enlightenment [[https://stackoverflow.com/questions/12264789/shuffle-array-in-go][here]].
+
+* DONE Preventing =systemd -- user= from launching :systemd:
+CLOSED: [2021-10-29 Fri 14:40]
+:PROPERTIES:
+:EXPORT_FILE_NAME: preventing-systemd-user-from-launching
+:END:
+My friend Yari came to me this morning with a small challenge:
+How to create a temporary user on a GNU/linux system preventing
+the =systemd --user= from launching for that user upon login.
+
+According to =pam_systemd(8)=, =user@.service=
+is the one running =systemd --user=
+
+So, we can accomplish what is needed by masking the aforementioned service
+just before the actual login:
+#+begin_src sh
+sudo systemctl mask user@.service
+#+end_src
+Now login as the new user to perform some tasks.
+Once the login is complete, we can unmask the service, to leave things
+as they were:
+#+begin_src sh
+sudo systemctl unmask user@.service
+#+end_src
+
+* DONE Backup your CDDA media to a single-file flac with embedded cuesheet :audio:backup:archlinux:abcde:mpd:
+CLOSED: [2019-11-24 Sun 08:15]
+:PROPERTIES:
+:EXPORT_FILE_NAME: cdda-to-single-file-flac
+:END:
+
+On [[https://www.archlinux.org/][Arch Linux]], the required packages are readily available:
+- [[https://www.archlinux.org/packages/community/any/abcde/][abcde]]
+- [[https://www.archlinux.org/packages/extra/x86_64/flac/][flac]]
+- [[https://aur.archlinux.org/packages/mkcue/][mkcue]]
+
+#+begin_src sh
+abcde -1 -o flac -a default,cue
+#+end_src
+
+This will produce a couple of files:
+- A single flac file with an embedded cuesheet (this cuesheet does not include metadata nor track names).
+- A cuesheet file.
+
+If you use [[https://www.archlinux.org/packages/extra/x86_64/mpd/][mpd]] to
+listen to your audio, the cuesheet file needs a just a small edit to be
+usable:
+
+#+begin_src sh
+sed -i /^FILE/s/FLAC$/WAVE/ cuesheet.cue
+#+end_src
+
+* DONE Workaround for bad interaction between =pipenv= and =pyenv= :python:
+CLOSED: [2019-11-17 Sun 11:58]
+:PROPERTIES:
+:EXPORT_FILE_NAME: workaround-for-issue-with-pipenv-pyenv
+:END:
+
+I use [[https://archlinux.org][Arch Linux]] these days, and it is a 'bleeding-edge' distro, which means
+that, typically, only the latest stable versions of upstream packages are
+available.
+
+Recently, =python 3.8= [[https://www.archlinux.org/packages/extra/x86_64/python/][entered the arch repos]], replacing =python 3.7=
+altogether.  Note that [[https://www.archlinux.org/packages/extra/x86_64/python2/][=python 2.7=]] is still available, although I expect that
+it will be [[https://pythonclock.org/][dropped on January]].
+
+So, if you are working on a project that depends on =python 3.7=, you can
+leverage [[https://github.com/pyenv/pyenv][pyenv]], which is readily [[https://www.archlinux.org/packages/community/any/pyenv/][available]] from the Community repo.
+
+=pyenv= requires a modicum of setup, which is described [[https://github.com/pyenv/pyenv#basic-github-checkout][here]].
+
+=pipenv= supports working together with =pyenv=, and will detect if the
+required =python= version in your =Pipfile= is not installed in your system,
+and prompt you to install it on your behalf, via =pyenv=:
+
+#+begin_src sh
+$ tail -2 Pipfile
+[requires]
+python_version = "3.7"
+$ pipenv sync
+Warning: Python 3.7 was not found on your system…
+Would you like us to install CPython 3.7.5 with pyenv? [Y/n]:
+Installing CPython 3.7.5 with pyenv (this may take a few minutes)…
+✔ Success!
+
+Warning: The Python you just installed is not available on your PATH, apparently.
+#+end_src
+
+Oops!  Something is not working here, even though the =PATH= is setup OK.
+
+It is a [[https://github.com/pypa/pipenv/issues/3551][known issue]] with =pipenv= that is [[https://github.com/pypa/pipenv/issues/3551#issuecomment-485507674][possibly fixed]] in =master=, but
+definitely not in the [[https://github.com/pypa/pipenv/releases/tag/v2018.11.26][latest release]], which, as of today, is almost a year
+old.  Be patient, [[https://github.com/pypa/pipenv/issues/3742#issuecomment-492100711][a lot]] has been happening, but work is underway.
+
+We can work around this issue by ensuring that the required =python= version
+is installed, selecting it for the current project, and forcing =pipenv= to
+use it.
+
+#+begin_src sh
+$ pyenv install 3.7.5
+Downloading Python-3.7.5.tar.xz...
+-> https://www.python.org/ftp/python/3.7.5/Python-3.7.5.tar.xz
+Installing Python-3.7.5...
+Installed Python-3.7.5 to /home/pancho/.pyenv/versions/3.7.5
+$ cd someproject
+# This creates a =.python-version= file containing the selected version
+$ pyenv local 3.7.5
+$ pipenv --python "$(pyenv root)/shims/python" sync
+... Works OK now ...
+#+end_src
+
+This can be inconvenient if =pipenv= is being run from a =Makefile= that we
+don't want to edit.  Fortunately, there is a workaround for that, too.
+
+Instead of using the =--python= option to =pipenv=, we can just define the env
+var =PIPENV_PYTHON=, which controls the same behaviour (seen [[https://github.com/pypa/pipenv/issues/3855#issuecomment-512205338][here]]).
+
+To sum up:
+
+#+begin_src sh
+$ export PIPENV_PYTHON="$(pyenv root)/shims/python"
+$ pyenv install 3.7.5
+... yadda yadda ...
+$ pyenv local 3.7.5
+$ pipenv sync
+#+end_src
+
+As a final note, we can add the definition of =PIPENV_PYTHON= to your shell
+init script, so we don't have to bother to set it up everytime this comes
+across.
+
+* DONE Funny Shell trick :bash:
+CLOSED: <2013-08-17 20:17:09 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: funny-shell-trick
+:END:
+
+While sorting out a debian =.bashrc= file, I came across to this construct:
+
+#+begin_src sh
+export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
+#+end_src
+
+I found interesting the =${HISTCONTROL+,}= construct, which will evaluate to a
+comma (=,=) if =HISTCONTROL= is defined, to the empty string otherwise (I
+checked).
+
+It is useful to enrich (i.e., add while preserving the previous values)
+variables with new values that must be comma-separated.
+
+I'll try to explain this further.
+
+Let's assume that we have an enviroment variable =FOO= that controls the
+behaviour of some program.  We want to make sure that the =FOO= var holds the
+value =bar=, but we don’t know if some other scriptlet in the chain has
+already set some other value(s) to this var.  So, in order to preserve
+possible preset values for =FOO=, we do this:
+
+#+begin_src sh
+export FOO=${FOO}${FOO+,}myfoo  #¹
+#+end_src
+
+There are two obvious cases:
+
+a) =FOO= wasn’t previously set, hence =FOO=myfoo= after ¹ is executed
+
+b) =FOO= was previously set with, say =FOO=bar,baz=.  Then, after ¹ is
+executed, =FOO= will be =FOO=bar,baz,myfoo=.  Note the comma between =baz= and
+=myfoo=.  That’s the doing of =${FOO+,}=.
+
+* DONE fork explained Star Wars style, in Perl :perl:starwars:
+CLOSED: <2013-03-31 10:32:38 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: use-the-fork-luke
+:END:
+
+#+begin_src perl
+use Force qw(-midiclorians -jarjar);
+
+my $vader = fork;
+noooooo()
+    unless $vader;  # I am your father
+
+sub noooooo {
+    hang_there_for_a_while();
+    exit;           # to the Millenium Falcon
+}
+#+end_src
+
+* DONE Links on Git Workflows :git:
+CLOSED: <2011-05-30 07:54:18 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: links-on-git-workflows
+:END:
+
+- http://nvie.com/posts/a-successful-git-branching-model/
+- http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/
+- http://www.slideshare.net/sergio.gil/a-git-workflow
+- http://codicesoftware.blogspot.com/2010/11/linus-on-branching.html
+
+* DONE How to keep a copy of what you watch online :flash:video:
+CLOSED: <2009-12-31 12:22:17 +0100 CET>
+:PROPERTIES:
+:EXPORT_FILE_NAME: keeping-what-you-watch-online
+:END:
+
+Adobe Flash (sic) is so pervasive these days, specially for online video
+distribution.
+
+Sometimes (e.g., [[https://ted.com][TED.com]])
+the site kindly provides you with a link to download
+the video stream, but more often than not, they don’t (e.g., YouTube).
+
+There are some tools around which will download the video feed for you, but
+only work for certain well-known sites.
+I’m thinking of course of [[http://clive.sf.net][clive]] and [[https://youtube-dl.org/][youtube-dl]].
+These tools work by reverse-engineering the protocol the Flash client uses to
+talk to the "mothership".  Sometimes that protocol changes, without notice,
+and that leaves you out in the cold ’till the tool author cracks it again, and
+updates the tool in question accordingly.
+
+So, in case you don’t have a working tool to download some nice video you just
+watched, here is a simple procedure to find out the download URL that the Flash
+client uses internally.  Install some logging proxy, such as
+[[https://tinyproxy.github.io/][Tinyproxy]], and configure your browser to use it.  Load the page,
+watch a bit of the video, and then check the logs.  The URL will be there.
+Feed it to wget, and you are all set!
+
+Note that some sites will put the download URL literally in the web page, as a
+parameter to the Flash player object, so looking for the string =.flv= on the
+sources will work as well.  [[https://rtve.es][RTVE]] is one of such sites.
+
+This procedure worked for me nicely, and I guess that some variation of it is
+what the authors of clive and youtube-dl use to crack the protocols.  Then I
+run into [[https://citywire.co.uk][citywire]], a british financial news site.  Their Flash
+client uses =https= plus some kind of certificate to connect to their video
+repository, so the proxy technique won’t work.  This is because the proxy only
+gets to see the encrypted connection, so you cannot extract the URL from it.
+And the certificate precludes the use of faking =https= proxies like
+[[https://tinyproxy.github.io/][WebScarab]].  Mmmm.  This is gonna be tough.
+
+Then I realised (while sleeping, actually)
+that the design of the client would require securing temporary
+disk storage to ensure the video reproduction, as the video streams could grow
+very large, and keeping all that stuff in RAM would be excessive.  Where?
+Well, in =/tmp=, of course!  Yeah, you will find that most Flash video player
+implementations work that way, securing a file named something like
+=/tmp/Flash7oo3ar=, where they download the video stream, and keep it there
+until you kill the player.  Yay!
+
+If you are in Windoze, these clients use exclusive file access to that
+temporary file, so you cannot copy it.  And since the client removes it when it
+dies (when you close the web page on your browser), not much of a loophole
+there.  But in =UNIX®= it’s a different story.  A simple =cp= or =ln= to that
+file will allow you to keep it after the client dies.  And what about Mac OS X?
+There you have per-user =/tmp= dirs, but once you locate that directory you will
+find the aforementioned file there.   So we are all good!  From now on, if you
+just watched an online video you want to keep, go to =/tmp= and it will be
+sitting there for you to back it up.
+
+I really look forward to the next generation of web browsers providing
+unified video reproduction capabilities, and hence rendering all this crappy
+Flash stuff obsolete.  That would be the day.
+
+* DONE Kids, don't try this at home! :bash:perl:infosec:
+CLOSED: <2009-10-05 17:45:28 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: fork-bombs
+:END:
+
+Look at this beauty:
+#+begin_src sh
+(){ :|:& };:
+#+end_src
+
+If fed to bash, it will start a cascade of processes that will leave your box
+almost inoperable.  It is an example of what's called
+[[http://en.wikipedia.org/wiki/Fork_bomb]["fork bomb"]].  Look there for
+further discussion, including cure and prevention.
+
+I really love the Perl version of it:
+
+#+begin_src perl
+fork while fork
+#+end_src
+
+he he.
+
+Thanks to my friend Dato for showing it to me!
+
+* DONE Introduction to Kerberos
+CLOSED: <2009-09-22 19:19:15 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: introduction-to-kerberos
+:END:
+
+My friend agi referred me to this theatrical introduction to the Kerberos
+network authentication protocol:
+[[http://web.mit.edu/Kerberos/dialogue.html][Designing an Authentication System: a Dialogue in Four Scenes]].
+
+The play portraits two sysadmins working at MIT, Athena and Euripides, who
+decide to take on the task of designing such a beast.
+
+Really nice reading.  Anyone willing to play it?
+
+* DONE Where was I? :bash:
+CLOSED: <2009-07-30 18:50:33 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: where-was-i
+:END:
+
+=UNIX®= shells maintain the previous working directory in the variable
+=OLDPWD=, so it is easy to jump back to where you were previously dwelling:
+
+#+begin_src sh
+cd $OLDPWD
+#+end_src
+
+This is a bit cumbersome to type, so this shortcut is provided:
+
+#+begin_src sh
+cd -
+#+end_src
+
+(My then-classmate Carlos told me about this back in ’98).
+
+Recently I learned that for commands other than =cd=, which is internal to the
+shell, =ksh= and =bash= provide a tilde expansion for this =OLDPWD= var, i.e.:
+=~-=
+
+#+begin_example
+$ cd /srv/media/doc/science/cs/biblia/oreilly/lang/perl
+$ ls mastering*
+mastering_perl.pdf
+$ cd /this/other/place
+$ cp -a ~-/mastering_perl.pdf .    # et voilà !
+#+end_example
+
+* DONE Music in the park :music:
+CLOSED: <2009-06-30 23:26:00 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: music-in-the-park
+:END:
+
+I just came home after a long walk through a park nearby (el Retiro).
+At a certain point, I started to hear an accordion melody, which I
+happened to know: « La Valse des monstres » from the Amélie original
+soundtrack, by Yann Tiersen.  This would be no more than a nicety, if it wasn't
+for the fact that the guy who was playing the melody was also… riding a
+monocycle!  :-O.  Some circus guy, I guess.  I really enjoyed the moment.
+
+* DONE Getting X to work on an asus eeebox :x11:
+CLOSED: <2009-04-22 10:23:05 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: getting-X-to-work-on-an-asus-eeebox
+:END:
+
+Make sure that =xorg.conf= looks like this:
+
+#+begin_src conf :tangle 10-eeebox.conf
+Section "Device"
+    Identifier  "Configured Video Device"
+    Option      "monitor-LVDS"  "LVDS"
+EndSection
+
+Section "Monitor"
+    Identifier  "LVDS"
+    Option      "Ignore"    "True"
+EndSection
+#+end_src
+
+Otherwise, the output will go to the =LVDS= port, which is not used
+on the /eeebox/.
+
+Found the answer [[http://forum.eeeuser.com/viewtopic.php?id=39698][here]].
+
+* DONE Catalyst on Windows :perl:windows:
+CLOSED: <2009-06-20 16:33:00 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: catalyst-on-windows
+:END:
+
+After installing [[http://www.strawberryperl.com][Strawberry Perl]]
+run these commands, and may the Gods of ADSL be with you…
+
+#+begin_example
+C:\> cpanp "s conf prereqs 1; s save"
+C:\> cpanp "s selfupdate all"
+C:\> cpanp i Win32::Process Catalyst::Devel
+#+end_example
+
+* DONE New url for this blog’s feed - please update your syndication! :meta:
+CLOSED: <2009-03-12 06:25:46 +0100 CET>
+:PROPERTIES:
+:EXPORT_FILE_NAME: new-url
+:END:
+
+I’ve reconfigured my site to serve this blog from a static tree, instead of
+through =cgi=.  The new syndication url is now:
+
+https://blog.pancho.name/index.xml
+
+Please, update your agregator settings to fetch the new url instead of the old
+one.
+
+I will REMOVE access to the old one in a few days.  Thanks!
+
+* DONE Inspiration :programming:
+CLOSED: <2009-03-07 11:38:28 +0100 CET>
+:PROPERTIES:
+:EXPORT_FILE_NAME: inspiration
+:END:
+
+I just found a reference to this article by
+[[http://en.wikipedia.org/wiki/Peter_Norvig][Peter Norvig]]:
+
+[[http://norvig.com/21-days.html][Teach Yourself Programming in Ten Years]].
+
+Recommended reading.
+
+* DONE Perl mojo :perl:email:
+CLOSED: <2008-10-10 09:33:01 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: email-purger-in-perl
+:END:
+
+I enjoy writing small Perl scripts to perform admin tasks.
+
+A couple of days ago I had to delete more than 3000 messages in an email
+inbox, relaying only on POP3 to do it.
+
+Issuing 3000+ =dele= commands by hand was not a very desirable prospect, so I
+performed a CPAN search looking for POP3-handling modules.
+
+Bingo!
+[[http://search.cpan.org/~markov/Mail-Box-2.084/lib/Mail/Box/POP3.pod][Mail::Box::POP3]]
+does the trick nicely.  And it was already installed in my debian box,
+so I could proceed immediately:
+
+#+name: pop3purger
+#+caption: pop3purger
+#+begin_src perl :tangle pop3purger
+#!/usr/bin/perl
+
+use 5.010;
+use warnings;
+use strict;
+
+use Mail::Box::POP3;
+
+my $pop = Mail::Box::POP3->new(
+    access      => 'rw',
+    trace       => 'DEBUG',
+    type        => 'pop3',
+    username    => 'someuser',
+    password    => 'somepass',
+    server_name => 'pop3.whatever.server.example'
+) or die "Cannot connect: $!";
+
+$_->delete for $pop->messages;
+#+end_src
+
+Once =$pop= is created, the connetion is established with the server, and the
+message list (headers only) is loaded into the object, and available through
+the 'messages' method.
+
+A simple ‘for’ iterates through the list, and deletes every sucker.
+
+Nice and sweet.
+
+* DONE Clarke is gone :scifi:
+CLOSED: <2008-03-19 09:23:15 +0100 CET>
+:PROPERTIES:
+:EXPORT_FILE_NAME: clarke-is-gone
+:END:
+
+This morning I started my day watching the 9th episode of "The Bing Bang
+Theory".  Just the first minutes, since I had to go to work.  It was
+hilarious, they even made a funny homage to ‘2001 - a space odyssey
+movie’ (can you believe it?).  Feeling comforted by it, I went for my
+daily dose of slashdot, and then it struck me:
+
+[[http://science.slashdot.org/science/08/03/18/2214208.shtml][Arthur C. Clarke is dead at 90]].
+
+My favourite writer is gone.  He will meet Asimov in =/dev/null=, and
+make the place more fun!
+
+Fare well, dear Sir.
+
+* DONE Dinosaurs in Madrid! :dinosaurs:
+CLOSED: <2008-01-21 15:03:45 +0100 CET>
+:PROPERTIES:
+:EXPORT_FILE_NAME: dinosaurs-in-madrid
+:END:
+
+A couple of weeks ago I was taking a pleasant walk by the neighbourhood when…
+GaLAxY!  a Tyrannosaurus rex!  Well, not quite, but at least a well preserved
+craneum from one of them.  It was no museum, no… A shop! It is named "Geoda",
+and specializes in fossils and minerals.  Must see!
+
+GEODA \
+cl. General Díaz Porlier, 19 \
+=<M>= Goya \
+Madrid \
+SPAIN
+
+* DONE On ssh-agent :ssh:
+CLOSED: <2008-01-15 08:45:50 +0100 CET>
+:PROPERTIES:
+:EXPORT_FILE_NAME: ssh-agent
+:END:
+
+Yesterday a friend had an issue with =ssh=, so after having my dose of
+sleep, I decided to write about it and share it with the World! :-)
+
+** The Problem
+If you use ssh, you probably have found an use for RSA/DSA keys.  With
+these, instead of having to type (and send) passwords when you connect
+to a remote host, you just connect! (more on that later).
+
+But unless your private key is saved unprotected (i.e., without a
+*passphrase*) each time you establish a ssh link you will have to
+type that passphrase.  Not much of a gain, right?
+
+But fear not, fellow hackers.  ssh-agent to the rescue!  This beast
+will keep an unencrypted copy of our RSA/DSA keys in memory, and to do
+so we will only have to type the passphrase just once (per session)!
+
+You can even use svn or CVS over ssh, without a hassle.
+
+Now, how does ssh know of the existence of ssh-agent?  Well, this is
+=UN*X=, right?  So, through the environment.
+
+When invoked, ssh will look for this variable in the
+environment:
+
+#+begin_src sh
+SSH_AUTH_SOCK=/tmp/ssh-lyKDh18679/agent.18679
+#+end_src
+
+So, if this one is set, ssh will try to talk to ssh-agent by means of that
+socket, and ask for her help to autenticate.  This will initiate a
+Diffie-Hellman handshake, but that's another story...
+
+** Chicken and Egg Problem
+When invoked, ssh-agent will become a daemon and provide the
+following output:
+
+#+begin_src sh
+$ ssh-agent
+SSH_AUTH_SOCK=/tmp/ssh-BepcqN5028/agent.5028; export SSH_AUTH_SOCK;
+SSH_AGENT_PID=5029; export SSH_AGENT_PID;
+echo Agent pid 5029;
+#+end_src
+
+So, as of now, if we do nothing more, we well have a ssh-agent
+running, and nobody will know about it, not even ssh!
+
+We have to affect the environment for everybody to know that we have
+an agent running, and how to contact it.
+
+But the output of ssh-agent, if properly handed, would do just that!
+
+#+begin_src sh
+$ eval `ssh-agent`
+Agent pid 5029
+#+end_src
+
+Hey, now our environment contains =SSH_*= variables, that will be
+inherited by any subshell or subprocess.  Including ssh!
+
+If we use our system through a single point of entry, e.g., a single
+tty, then this setup works for us.  But if you use either multiple ttys
+or a graphical environment with multiple terminal windows, then you have
+a problem.  In these last two scenarios, if you launch a ssh-agent in a
+terminal, that daemon will not be known in a sibling terminal, so to
+say.  Because there is no way that one process inherits the environment
+from a sibling process.
+
+If you have to deal with the *multiple ttys scenario* I recommend
+the use of 'keychain'.  You will have to tweak a bit your .profile rc
+files, but otherwise works like a charm.  It is a simple wrapper over
+ssh-agent.  RTFM for more on that. (n.b.: F stands for Fine).
+
+Now let's check the *multiple (graphical) terminals scenario*
+I'm talking about rxvt, or xterm, or similar.  Well, fortunately, the
+problem was solved may years ago.  The X Window init scripts spawn a
+ssh-agent for us (if configured to do so), so every shell or process we
+get in our session is the descendant of an 'enlightened' one, i.e., one
+who got its environment updated to include the =SSH_*= variables.  So we
+got it!  We can right now launch a terminal and type:
+
+#+begin_src sh
+ssh-add
+#+end_src
+
+And dutifully type our passphrase.
+
+Even more, if we use this feature frequently, we can arrange our
+=.xsession= to ask for our passphrase just after login.
+
+Sample =.xsession=:
+
+#+name: .xsession
+#+begin_src sh
+SSH_ASKPASS=/usr/bin/ssh-askpass ssh-add < /dev/null
+exec x-window-manager
+#+end_src
+
+This invocation of ssh-add is a little fancy, right?  If we install the
+ssh-askpass software (debian package: ssh-askpass), we can tell ssh-add
+to use it (via environment) as a means to get the passphrase from us.
+Otherwise, ssh-add would try to read it from the terminal, which is not
+connected to the screen/keyboard in this phase of the session setup.
+
+Well, hope that it helps!  Feedback always welcome!
+
+* DONE Bye bye, pesetas! :currency:
+CLOSED: <2007-05-04 11:49:46 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: bye-bye-pesetas
+:END:
+
+Hoy he ido al Banco de España, a cambiar mis últimas pesetas.  Nunca había
+estado dentro, aunque una vez vi el interior en una película española, con
+José Coronado (sic).
+
+Me gustó mucho verlo con mis propios ojos, y también fue curioso el proceso de
+canje;  en cierta ventanilla disponen de una máquina donde se echan las
+monedas, y automáticamente se clasifican y contabilizan, de manera casi
+instantánea.
+
+Bye bye, pesetas!
+
+* DONE La Huella de Bach :music:
+CLOSED: <2007-04-26 22:00:00 +0200 CEST>
+:PROPERTIES:
+:EXPORT_FILE_NAME: la-huella-de-bach
+:END:
+
+Thanks to my friend ANTONIVS, I attended a nice concert today.  I enjoyed it
+thoroughly, except perhaps /Hindemith's quartet #5 op. 32/, which failed to
+capture my enthusiasm... :-)
+
+The last piece of the concert read like this in the booklet:
+
+«Obertura de El holandés errante tal como la tocaría a primera vista una mala
+orquestina de balneario a las siete de la mañana junto al manantial».
+
+I don't feel very much like translating that one; perhaps one day I will...
+
+It was hilarious!  They played very much like they said!  Apart from 'Les
+Luthiers', this is the first time I've ever laughed with classical music.
+
+* DONE About
+CLOSED: [2019-11-17 Sun 00:21]
+:PROPERTIES:
+:EXPORT_HUGO_SECTION:  about
+:EXPORT_FILE_NAME:  _index
+:EXPORT_HUGO_MENU:  :menu main
+:END:
+
+** About Me
+   Carbon-based semi-sentient life form currently dwelling on Sol III.
+
+* Footnotes
+* Run hugo
+#+begin_src shell
+hugo server -D --navigateToChanged & disown
+xdg-open http://localhost:1313
+#+end_src
+
+* Hugo settings :ARCHIVE:
+#+hugo_base_dir: .
+
+* COMMENT Local Variables :ARCHIVE:
+# Local Variables:
+# eval: (org-hugo-auto-export-mode)
+# End:
