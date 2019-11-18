@@ -1,4 +1,53 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://blog.pancho.name/'
 languageCode = 'en-us'
-title = 'My New Hugo Site'
+title = '…soul, as in software?'
 theme = 'spectre-pixel'
+copyright = '© 2007-2023 pancho horrillo'
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[params]
+  name = 'pancho horrillo'
+  # altName = ''
+  description = 'Rantings about life.'
+  bio = 'Old dog GNU/Linux and Perl lover.  Enthusiast gopher.  Empowered by Arch Linux, NixOS and Doom Emacs.'
+  enableRSS = true
+
+  # Author information in posts
+  aboutAuthor = 'I do things with computers.'
+
+  # Integrate Javascript files or stylesheets by adding the url to the external assets or by
+  # linking local files with their path relative to the static folder, e.g. 'css/styles.css'
+  # customCSS = [
+  #   'https://cdn.rawgit.com/konpa/devicon/df6431e323547add1b4cf45992913f15286456d3/devicon.min.css'
+  # ]
+  # customJS  = []
+
+  # The variables below are optional too and can be used to
+  # translate or customize each string of the theme.
+
+  # Navigation links
+  #home = ''
+  #subscribe = ''
+
+  # Pagination links
+  #olderPosts = ''
+  #newerPosts = ''
+  #copyright = ''
+  copyright = '© 2007-2023 pancho horrillo'
+
+  # 404 page
+  #title404 = ''
+  #subtitle404 = ''
+
+# Add additional social link entries underneath
+[social]
+  email    = 'pancho at pancho dot name'
+  github   = 'https://www.github.com/panchoh'
+  linkedin = 'https://www.linkedin.com/in/pancho-horrillo'
+  twitter  = 'https://www.twitter.com/panchoHorrillo'
+  bbva     = 'https://www.bbva.com/en/guest-authors/pancho-horrillo/'
+
+[taxonomies]
+  tag = 'tags'
