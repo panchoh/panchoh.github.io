@@ -1,0 +1,6 @@
+* pancho’s blog
+** How to clone
+This blog’s theme is registered as a submodule, hence the =--recursive=.
+#+begin_src sh
+git clone --recursive git@github.com:panchoh/panchoh.github.io.git
+#+end_src
