@@ -1,0 +1,5 @@
+* pancho’s blog
+** How to clone
+#+begin_src sh
+git clone --recursive git@github.com:panchoh/panchoh.github.io.git
+#+end_src
