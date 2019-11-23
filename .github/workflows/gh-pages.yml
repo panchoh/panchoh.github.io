@@ -1,0 +1,44 @@
+name: Publish site on GitHub Pages
+
+on:
+  push:
+    branches:
+      - source
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone current repo
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install emacs
+        run: |
+          DEBIAN_FRONTEND=noninteractive sudo apt install --yes emacs-nox
+
+      - name: Setup Timezone
+        run: |
+          sudo timedatectl set-timezone Europe/Madrid
+          sudo dpkg-reconfigure --frontend noninteractive tzdata
+
+      - name: Render Markdown content
+        run: |
+          emacs content.org --batch --load=.emacs --funcall=org-hugo-export-all-wim-to-md
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.118.2'
+          # extended: true
+
+      - name: Build static site with hugo
+        run: hugo --minify
+
+      - name: Publish static site on gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          force_orphan: true
