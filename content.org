@@ -1,3 +1,28 @@
+* DONE Backup your CDDA media to a single-file flac with embedded cuesheet :audio:backup:archlinux:abcde:mpd:
+  CLOSED: [2019-11-24 Sun 08:15]
+  :PROPERTIES:
+  :EXPORT_FILE_NAME: cdda-to-single-file-flac
+  :END:
+
+  On [[https://www.archlinux.org/][Arch Linux]], the required packages are readily available:
+  - [[https://www.archlinux.org/packages/community/any/abcde/][abcde]]
+  - [[https://www.archlinux.org/packages/extra/x86_64/flac/][flac]]
+  - [[https://aur.archlinux.org/packages/mkcue/][mkcue]]
+
+  #+begin_src bash
+    $ abcde -1 -o flac -a default,cue
+  #+end_src
+
+  This will produce a couple of files:
+  - A single flac file with an embedded cuesheet (this cuesheet does not include metadata nor track names).
+  - A cuesheet file.
+
+  If you use [[https://www.archlinux.org/packages/extra/x86_64/mpd/][mpd]] to listen to your audio, the cuesheet file needs a just a small edit to be usable:
+
+  #+begin_example bash
+  $ sed -i /^FILE/s/FLAC$/WAVE/ cuesheet.cue
+  #+end_example
+
 * DONE Workaround for bad interaction between =pipenv= and =pyenv=
   CLOSED: [2019-11-17 Sun 11:58]
   :PROPERTIES:
