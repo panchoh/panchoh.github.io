@@ -4,6 +4,9 @@ title = "…soul, as in software?"
 theme = "spectre-pixel"
 copyright = "© 2007-2020 pancho horrillo"
 
+[markup.goldmark.renderer]
+  unsafe = true
+
 [params]
   name = "pancho horrillo"
   # altName = ""
