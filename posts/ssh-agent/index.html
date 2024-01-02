@@ -1,0 +1,63 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="ie=edge,chrome=1"><meta name=viewport content="width=device-width,initial-scale=1"><meta name=author content="pancho horrillo"><meta name=description content="Rantings about life."><meta name=generator content="Hugo 0.118.2"><title>On ssh-agent &#183; …soul, as in software?</title><link rel="shortcut icon" href=https://blog.pancho.name/images/favicon.ico><link rel=stylesheet href=https://blog.pancho.name/css/spectre.min.css><link rel=stylesheet href=https://blog.pancho.name/css/style.css><link rel=stylesheet href=https://blog.pancho.name/css/highlight.css><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css><link href rel=alternate type=application/rss+xml title="…soul, as in software?"><meta property="og:title" content="On ssh-agent"><meta property="og:description" content="Yesterday a friend had an issue with ssh, so after having my dose of sleep, I decided to write about it and share it with the World! :-)
+The Problem If you use ssh, you probably have found an use for RSA/DSA keys. With these, instead of having to type (and send) passwords when you connect to a remote host, you just connect! (more on that later).
+But unless your private key is saved unprotected (i."><meta property="og:type" content="article"><meta property="og:url" content="https://blog.pancho.name/posts/ssh-agent/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2008-01-15T08:45:00+01:00"><meta property="article:modified_time" content="2008-01-15T08:45:00+01:00"><meta itemprop=name content="On ssh-agent"><meta itemprop=description content="Yesterday a friend had an issue with ssh, so after having my dose of sleep, I decided to write about it and share it with the World! :-)
+The Problem If you use ssh, you probably have found an use for RSA/DSA keys. With these, instead of having to type (and send) passwords when you connect to a remote host, you just connect! (more on that later).
+But unless your private key is saved unprotected (i."><meta itemprop=datePublished content="2008-01-15T08:45:00+01:00"><meta itemprop=dateModified content="2008-01-15T08:45:00+01:00"><meta itemprop=wordCount content="641"><meta itemprop=keywords content="ssh,"><meta name=twitter:card content="summary"><meta name=twitter:title content="On ssh-agent"><meta name=twitter:description content="Yesterday a friend had an issue with ssh, so after having my dose of sleep, I decided to write about it and share it with the World! :-)
+The Problem If you use ssh, you probably have found an use for RSA/DSA keys. With these, instead of having to type (and send) passwords when you connect to a remote host, you just connect! (more on that later).
+But unless your private key is saved unprotected (i."><meta name=twitter:site content="@https://www.twitter.com/panchoHorrillo"></head><body onload=setPixelFont()><div class="container p-fixed" style=z-index:3><nav class="navbar m-2 p-2 s-rounded shadow bg-primary"><section class=navbar-section><button class="btn btn-action btn-primary s-circle text-gray" id=pixelfont-toggle><i class="fas fa-robot fa-lg"></i></button></section><section class=navbar-section><a class="btn btn-primary" href=https://blog.pancho.name/>Home</a>
+<a class="btn btn-primary mx-2" href=/about/>About</a>
+<a class="btn btn-accent" href target=_blank><i class="fas fa-rss fa-lg"></i></a></section></nav></div><section class="container grid-md"><div class=columns><article class="container p-centered mt-space"><header><h2 class=text-center>On ssh-agent</h2><h6 class="text-gray text-italic"></h6></header><section class=my-gap><p>Yesterday a friend had an issue with <code>ssh</code>, so after having my dose of
+sleep, I decided to write about it and share it with the World! :-)</p><h2 id=the-problem>The Problem</h2><p>If you use ssh, you probably have found an use for RSA/DSA keys. With
+these, instead of having to type (and send) passwords when you connect
+to a remote host, you just connect! (more on that later).</p><p>But unless your private key is saved unprotected (i.e., without a
+<strong>passphrase</strong>) each time you establish a ssh link you will have to
+type that passphrase. Not much of a gain, right?</p><p>But fear not, fellow hackers. ssh-agent to the rescue! This beast
+will keep an unencrypted copy of our RSA/DSA keys in memory, and to do
+so we will only have to type the passphrase just once (per session)!</p><p>You can even use svn or CVS over ssh, without a hassle.</p><p>Now, how does ssh know of the existence of ssh-agent? Well, this is
+<code>UN*X</code>, right? So, through the environment.</p><p>When invoked, ssh will look for this variable in the
+environment:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>SSH_AUTH_SOCK<span style=color:#f92672>=</span>/tmp/ssh-lyKDh18679/agent.18679
+</span></span></code></pre></div><p>So, if this one is set, ssh will try to talk to ssh-agent by means of that
+socket, and ask for her help to autenticate. This will initiate a
+Diffie-Hellman handshake, but that&rsquo;s another story&mldr;</p><h2 id=chicken-and-egg-problem>Chicken and Egg Problem</h2><p>When invoked, ssh-agent will become a daemon and provide the
+following output:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>$ ssh-agent
+</span></span><span style=display:flex><span>SSH_AUTH_SOCK<span style=color:#f92672>=</span>/tmp/ssh-BepcqN5028/agent.5028; export SSH_AUTH_SOCK;
+</span></span><span style=display:flex><span>SSH_AGENT_PID<span style=color:#f92672>=</span>5029; export SSH_AGENT_PID;
+</span></span><span style=display:flex><span>echo Agent pid 5029;
+</span></span></code></pre></div><p>So, as of now, if we do nothing more, we well have a ssh-agent
+running, and nobody will know about it, not even ssh!</p><p>We have to affect the environment for everybody to know that we have
+an agent running, and how to contact it.</p><p>But the output of ssh-agent, if properly handed, would do just that!</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>$ eval <span style=color:#e6db74>`</span>ssh-agent<span style=color:#e6db74>`</span>
+</span></span><span style=display:flex><span>Agent pid <span style=color:#ae81ff>5029</span>
+</span></span></code></pre></div><p>Hey, now our environment contains <code>SSH_*</code> variables, that will be
+inherited by any subshell or subprocess. Including ssh!</p><p>If we use our system through a single point of entry, e.g., a single
+tty, then this setup works for us. But if you use either multiple ttys
+or a graphical environment with multiple terminal windows, then you have
+a problem. In these last two scenarios, if you launch a ssh-agent in a
+terminal, that daemon will not be known in a sibling terminal, so to
+say. Because there is no way that one process inherits the environment
+from a sibling process.</p><p>If you have to deal with the <strong>multiple ttys scenario</strong> I recommend
+the use of &lsquo;keychain&rsquo;. You will have to tweak a bit your .profile rc
+files, but otherwise works like a charm. It is a simple wrapper over
+ssh-agent. RTFM for more on that. (n.b.: F stands for Fine).</p><p>Now let&rsquo;s check the <strong>multiple (graphical) terminals scenario</strong>
+I&rsquo;m talking about rxvt, or xterm, or similar. Well, fortunately, the
+problem was solved may years ago. The X Window init scripts spawn a
+ssh-agent for us (if configured to do so), so every shell or process we
+get in our session is the descendant of an &rsquo;enlightened&rsquo; one, i.e., one
+who got its environment updated to include the <code>SSH_*</code> variables. So we
+got it! We can right now launch a terminal and type:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>ssh-add
+</span></span></code></pre></div><p>And dutifully type our passphrase.</p><p>Even more, if we use this feature frequently, we can arrange our
+<code>.xsession</code> to ask for our passphrase just after login.</p><p>Sample <code>.xsession</code>:</p><p><a id=code-snippet--.xsession></a></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh><span style=display:flex><span>SSH_ASKPASS<span style=color:#f92672>=</span>/usr/bin/ssh-askpass ssh-add &lt; /dev/null
+</span></span><span style=display:flex><span>exec x-window-manager
+</span></span></code></pre></div><p>This invocation of ssh-add is a little fancy, right? If we install the
+ssh-askpass software (debian package: ssh-askpass), we can tell ssh-add
+to use it (via environment) as a means to get the passphrase from us.
+Otherwise, ssh-add would try to read it from the terminal, which is not
+connected to the screen/keyboard in this phase of the session setup.</p><p>Well, hope that it helps! Feedback always welcome!</p><code class=text-bold>Tags</code>
+<a class="chip text-accent" href=https://blog.pancho.name/tags/ssh>ssh</a></section><div class="divider my-gap"></div><footer class="col-12 d-inline-block"><span class=float-left><button class="btn btn-action btn-accent shadow s-circle" onclick=window.history.back()><i class="fas fa-arrow-left"></i></button></span>
+<span class=float-right><div class="text-right float-left mx-2"><span class=text-dark>pancho horrillo</span><br><span class=text-gray>I do things with computers.</span></div><figure class="avatar avatar-lg"><img id=profile></figure></span></footer></article><footer class="container p-centered text-center my-gap"><div class=container><a class=symbol href=https://www.bbva.com/en/guest-authors/pancho-horrillo/ target=_blank><i class="fab fa-bbva"></i></a>
+<a class=symbol href=mailto:pancho%20at%20pancho%20dot%20name target=_blank><i class="fas fa-envelope"></i></a>
+<a class=symbol href=https://www.github.com/panchoh target=_blank><i class="fab fa-github"></i></a>
+<a class=symbol href=https://www.linkedin.com/in/pancho-horrillo target=_blank><i class="fab fa-linkedin"></i></a>
+<a class=symbol href=https://www.twitter.com/panchoHorrillo target=_blank><i class="fab fa-twitter"></i></a></div><small class=text-gray>© 2007-2023 pancho horrillo</small></footer></div></section><script src=//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js></script>
+<script src=https://blog.pancho.name/js/main.js></script>
+<script src=https://blog.pancho.name/js/highlight.js></script>
+<script>hljs.initHighlightingOnLoad()</script></body></html>
