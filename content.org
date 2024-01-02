@@ -39,6 +39,38 @@ umount /tmp/WindowsISO
 rmdir /tmp/WindowsISO
 #+end_src
 
+* DONE Just Discovered OpenVi :NixOS:homeManager:vi:
+CLOSED: [2024-01-02 Tue 13:10]
+:PROPERTIES:
+:EXPORT_FILE_NAME: just-discovered-openvi
+:END:
+
+Since I moved to NixOS from Arch Linux as my daily driver last year, I missed
+having /traditional vi/ available on my systems.  Having the minimal ~vi~ around
+always felt good, because I could leverage its awesome power (packed in but a
+couple hundred kilobytes) and snappy startup time to do some edits here and
+there.
+
+But, alas, it is not available on ~nixpkgs~, and I had not found the time to build
+it from scratch myself.
+
+The venerable port has received no updates since 2005, and it is kept sea-worthy
+by out-of-tree patches that address drift from current C compiler standards,
+including some security issues.  Besides, the code lives on /ye olde freshmeat/,
+on a CVS repo.
+
+So, last week I took another approach, namely to search for alternate sources of
+vi goodness.  And I hit the jackpot with [[https://github.com/johnsonjh/OpenVi][OpenVi]] (check the Overview for its
+ancestry), which is apparently well maintained, as well as available on
+~nixpkgs~.  Not too shabby, eh?
+
+I’ve [[https://github.com/panchoh/nixos/commit/e33687ff939760a8b9b752f0681322174a56425b][tweaked]] my flake to make use of it, and quite happy with the result.
+Had to jump through some hoops, though, because when generating its =.exrc=
+config file, OpenVi wouldn't accept it as a symlink to a pre-cooked config file
+on the Nix store (perceived ownership mismatch), so I had to leverage Home
+Manager’s =activation= stage to produce a plain file instead.
+
+
 * DONE Yazi is a cool TUI file manager
 CLOSED: [2023-09-24 Sun 12:18]
 :PROPERTIES:
